@@ -1,0 +1,9 @@
+{
+"input_data_path":"D:\\AProjects\\DrStudy\\AI\\A1_TimeSeries\\data\\ETTh1.csv",
+"output_data_path":"Demo\\Workspace\\test20250814",
+"selected_features": "all",
+"prediction_len": 1,
+"window_len": 96,
+"split_ratio": [0.6, 0.2, 0.2],
+"batch_size": 128
+}
