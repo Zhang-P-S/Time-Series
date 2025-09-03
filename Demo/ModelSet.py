@@ -10,7 +10,7 @@ from tskit import *
 import numpy as np
 import pickle
 import os
-
+import pandas as pd
 # ======================
 # 实例化
 # ======================
@@ -80,14 +80,14 @@ match model_type:
 
 model = model.to(device)
 
-# 多卡初始化
+# 显卡初始化
 if torch.cuda.device_count() > 1:
     model = torch.nn.DataParallel(model, device_ids=[0, 1])
 
 # 查看参数量
 total_params = sum(p.numel() for p in model.parameters())
 trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-
+print(f"* 选取的模型为：{model_type}")
 print(f"* 总参数量: {total_params}")
 print(f"* 可训练参数量: {trainable_params}")
 
@@ -124,4 +124,18 @@ trainer.train(train_loader, valid_loader, saved_model_path)
 
 
 save_data(trainer.metrics['train_mse'], os.path.join(output_data_path, 'metrics\\mse_train.csv'))
+print(trainer.train_lr)
 
+# ======================
+# 训练效果绘图
+# ======================
+def save_all_metrics(metrics_dict, output_path):
+    # 转换为DataFrame
+    df = pd.DataFrame(metrics_dict)
+    df.index.name = 'epoch'
+    df.to_csv(output_path, index=True)
+    print(f"Metrics saved to {output_path}")
+
+# 在训练完成后调用
+save_all_metrics(trainer.metrics, os.path.join(output_data_path, 'metrics\\all_metrics.csv'))
+del model

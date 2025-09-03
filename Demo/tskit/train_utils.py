@@ -1,5 +1,7 @@
 import torch
 import math
+import pandas as pd
+import os
 from tqdm import tqdm
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional
@@ -29,25 +31,29 @@ class Trainer:
         self.epoch = 0
         self.metrics = {
             'train_mse': [],
-            'val_mse': [],
             'train_r2': [],
-            'val_r2': [],
             'train_mape': [],
-            'val_mape': [],
             'train_smape': [],
-            'val_smape': [],
             'train_mae': [],
-            'val_mae': [],
             'train_rmse': [],
+        }
+        self.val_metrics = {
+            'val_mse': [],
+            'val_r2': [],
+            'val_mape': [],
+            'val_smape': [],
+            'val_mae': [],
             'val_rmse': [],
         }
-        self.train_lr = config.lr
+        self.train_lr = []
+    def lr_scheduler_step(self):
+        return self.config.lr/(2**self.epoch)
 
     def train_epoch(self, train_loader):
-        self.train_lr = self.config.lr/(2**self.epoch)
+        self.train_lr.append(self.lr_scheduler_step())
         self.optimizer = torch.optim.Adam(
             self.model.parameters(), 
-            lr=self.train_lr, 
+            lr=self.train_lr[-1], 
             weight_decay=self.config.weight_decay
         )
         self.model.train()
@@ -100,12 +106,12 @@ class Trainer:
                 total_loss += loss.item() * len(x)
                 
                 # Calculate metrics
-                self.metrics['val_mse'].append(loss.detach().cpu().item())
-                self.metrics['val_r2'].append(r2_loss(pred, y).detach().cpu().item())
-                self.metrics['val_mape'].append(mape_loss(pred, y).detach().cpu().item())
-                self.metrics['val_smape'].append(smape_loss(pred, y).detach().cpu().item())
-                self.metrics['val_mae'].append(mae_loss(pred, y).detach().cpu().item())
-                self.metrics['val_rmse'].append(rmse_loss(pred, y).detach().cpu().item())
+                self.val_metrics['val_mse'].append(loss.detach().cpu().item())
+                self.val_metrics['val_r2'].append(r2_loss(pred, y).detach().cpu().item())
+                self.val_metrics['val_mape'].append(mape_loss(pred, y).detach().cpu().item())
+                self.val_metrics['val_smape'].append(smape_loss(pred, y).detach().cpu().item())
+                self.val_metrics['val_mae'].append(mae_loss(pred, y).detach().cpu().item())
+                self.val_metrics['val_rmse'].append(rmse_loss(pred, y).detach().cpu().item())
         
         avg_loss = total_loss / len(val_loader.dataset)
         return avg_loss
@@ -142,9 +148,9 @@ class Trainer:
                 self.model_path = f"{save_path}_{self.epoch}{self.config.model_extension}"
                 self.save_model(self.model_path)
             print("| Epoch: {}/{} || Train Mse: {:.4f} | Dev Mse: {:.4f} | Train R²: {:.4f} | Dev R²: {:.4f} | Model saved to {}".format(
-                    self.epoch + 1, self.config.num_epochs, train_loss, val_loss, self.metrics['train_r2'][-1], self.metrics['val_r2'][-1], self.model_path))
+                    self.epoch + 1, self.config.num_epochs, train_loss, val_loss, self.metrics['train_r2'][-1], self.val_metrics['val_r2'][-1], self.model_path))
             print("| Epoch: {}/{} || Train SMape: {:.4f} | Dev SMape: {:.4f}".format(
-                    self.epoch + 1, self.config.num_epochs, self.metrics['train_smape'][-1], self.metrics['val_smape'][-1]))
+                    self.epoch + 1, self.config.num_epochs, self.metrics['train_smape'][-1], self.val_metrics['val_smape'][-1]))
             self.epoch += 1
             
     

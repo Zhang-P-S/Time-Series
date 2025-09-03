@@ -1,0 +1,11 @@
+{
+"test_data_path": "D:\\AProjects\\DrStudy\\AI\\A1_TimeSeries\\Demo\\Workspace\\test20250814\\test_loader.pkl",
+"model_path":"D:\\AProjects\\DrStudy\\AI\\A1_TimeSeries\\Demo\\Workspace\\test20250814\\saved_model_4.pth",
+"output_data_path":"D:\\AProjects\\DrStudy\\AI\\A1_TimeSeries\\Demo\\Workspace\\test20250814",
+"input_data_path":"D:\\AProjects\\DrStudy\\AI\\A1_TimeSeries\\Demo\\Workspace\\test20250814",
+"num_features": 7,
+"prediction_len": 1,
+"window_len": 96,
+"batch_size": 128,
+"model_type": "RINDCCNET"
+}

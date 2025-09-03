@@ -37,6 +37,7 @@ class TimeSeriesDataset(Dataset):
         # print(data.dtype)  # 查看数据类型
         if mode == 'test':
             self.data = data
+            self.label = label
         else:
             self.data = data
             self.label = label
@@ -48,7 +49,7 @@ class TimeSeriesDataset(Dataset):
         if self.mode in ['train', 'dev']:
             return self.data[index], self.label[index]
         else:
-            return self.data[index]
+            return self.data[index], self.label[index]
 
     def __len__(self):
         # Returns the size of the dataset

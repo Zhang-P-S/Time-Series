@@ -85,28 +85,33 @@ print("* 创建数据加载器")
 selected_values_torch = torch.FloatTensor(np.array(selected_values))
 print("* selected_values_torch.shape = {}".format(selected_values_torch.shape))
 
-train_data = selected_values_torch[:int(split_ratio[0]*data_len)]
-valid_data = selected_values_torch[int(split_ratio[0]*data_len):int((split_ratio[0] + split_ratio[1])*data_len)]
-test_data  = selected_values_torch[int((split_ratio[0] + split_ratio[1])*data_len):]
+train_data_raw = selected_values_torch[:int(split_ratio[0]*data_len)]
+valid_data_raw = selected_values_torch[int(split_ratio[0]*data_len):int((split_ratio[0] + split_ratio[1])*data_len)]
+test_data_raw  = selected_values_torch[int((split_ratio[0] + split_ratio[1])*data_len):]
 train_timestamp = selected_timestamp.iloc[:int((split_ratio[0] + split_ratio[1])*data_len)]
 test_timestamp =  selected_timestamp.iloc[int((split_ratio[0] + split_ratio[1])*data_len):]
-
+print("* train_data_raw.shape = {}".format(train_data_raw.shape))
+print("* valid_data_raw.shape = {}".format(valid_data_raw.shape))
+print("* test_data_raw.shape  = {}".format(test_data_raw.shape))
+print(test_timestamp.shape)
 # 定义训练器的的输入
-train_data,train_label = create_inout_sequences(train_data, window_len, prediction_len, config)
-valid_data,valid_label = create_inout_sequences(valid_data, window_len, prediction_len, config)
+train_data,train_label = create_inout_sequences(train_data_raw, window_len, prediction_len, config)
+valid_data,valid_label = create_inout_sequences(valid_data_raw, window_len, prediction_len, config)
+test_data,test_label = create_inout_sequences(test_data_raw, window_len, prediction_len, config)
 
 # 创建数据集
 train_dataset = TimeSeriesDataset(train_data,train_label,'train')
 valid_dataset = TimeSeriesDataset(valid_data,valid_label,'dev')
+test_dataset = TimeSeriesDataset(test_data,test_label,'test')
 
 # 创建 DataLoader
 train_loader = DataLoader(train_dataset, batch_size, shuffle=True, drop_last=True)
 valid_loader = DataLoader(valid_dataset, batch_size, shuffle=False, drop_last=True)
-# test_loader = DataLoader(test_dataset, batch_size=config['batchSize'], shuffle=False, drop_last=True)
+test_loader = DataLoader(test_dataset, batch_size, shuffle=False, drop_last=False)
 
 print("通过滑动窗口共有训练集数据：", len(train_data), "转化为批次数据:", len(train_loader))
 print("通过滑动窗口共有验证集数据：", len(valid_data), "转化为批次数据:", len(valid_loader))
-# print("通过滑动窗口共有测试集数据：", len(test_data), "转化为批次数据:", len(test_loader))
+print("通过滑动窗口共有测试集数据：", len(test_data), "转化为批次数据:", len(test_loader))
 print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>创建数据加载器完成<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 
 # ======================
@@ -116,12 +121,13 @@ print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>创建数据加载器完成<<<<<<<<<<<<<<<<<<
 selected_timestamp.to_csv(output_data_path+"\\selected_timestamp.csv", index=False)
 train_timestamp.to_csv(output_data_path+"\\train_timestamp.csv", index=False)
 test_timestamp.to_csv(output_data_path+"\\test_timestamp.csv", index=False)
-
+pd.DataFrame(test_data_raw.cpu().numpy()).to_csv(output_data_path+"\\test_data.csv", index=False)
 # 保存 train_loader 和 valid_loader
 with open(output_data_path+'\\train_loader.pkl', 'wb') as f:
     pickle.dump(train_loader, f)
-
 with open(output_data_path+'\\valid_loader.pkl', 'wb') as f:
     pickle.dump(valid_loader, f)
+with open(output_data_path+'\\test_loader.pkl', 'wb') as f:
+    pickle.dump(test_loader, f)
 
 
